@@ -1,0 +1,290 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <title>String Prefix and Suffix Checking</title>
+</head>
+<body>
+
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
+  <tr>
+    <td width="172" align="left" valign="top">Document number:</td>
+    <td width="435"><span style="background-color:#FFFF00">DxxxxR0</span></td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Date:</td>
+    <td width="435">2016-10-09</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Project:</td>
+    <td width="435">LEWG</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Reply-to:</td>
+    <td width="435">Mikhail Maltsev
+        &lt;<a href="mailto:maltsevm@gmail.com">maltsevm@gmail.com</a>&gt;</td>
+  </tr>
+</table>
+
+<h1>String Prefix and Suffix Checking</h1>
+
+<p><ol>
+  <li><a href="#motivation">Motivation</a></li>
+  <li><a href="#prior">Prior work</a></li>
+  <li><a href="#design">Design considerations</a></li>
+  <li><a href="#wording">Wording</a></li>
+  <li><a href="#references">References</a></li>
+</ol></p>
+
+<h2><a name="motivation">1. Motivation</a></h2>
+<p>Checking, whether or not a given string starts with a
+given prefix (or ends with a given suffix) is a common task. In fact, standard
+libraries of many other programming languages include routines for performing
+such checks, for example:</p>
+
+<p><ul>
+  <li>
+    Python: <tt>str</tt> and <tt>unicode</tt> classes have <tt>startswith</tt>
+    and <tt>endswith</tt> methods [<a href="#ref1">1</a>].
+  </li>
+  <li>
+    Java: class <tt>String</tt> has <tt>startsWith</tt> and <tt>endsWith</tt>
+    methods [<a href="#ref2">2</a>].
+  </li>
+</ul></p>
+
+<p>And so on.</p>
+
+<p>Also, some C++ libraries (other than the standard library) that implement a
+string type include such methods. For example, Qt  library has classes
+<tt>QString</tt> [<a href="#ref3">3</a>] and <tt>QStringRef</tt> (analogous to
+<tt>std::string_view</tt>) which have <tt>startsWith</tt> and
+<tt>endsWith</tt> member functions.</p>
+
+<p>These functions are widely used. For example, the source code of a recent
+version of Qt (excluding third-party components) has 1193 occurences of
+<tt>startsWith</tt> and 953 occurences of <tt>endsWith</tt>. Other examples include Webkit
+(304 occurences of <tt>startsWith</tt> and 142 occurences of <tt>endsWith</tt>) and LLVM
+(class <tt>StringRef</tt>, 113 matches for <tt>StartsWith</tt> and 38 matches for
+<tt>EndsWith</tt>).</p>
+
+<h2><a name="prior">2. Prior work</a></h2>
+
+<p>The <tt>basic_string_view</tt> class template  included <tt>starts_with</tt>
+and <tt>ends_with</tt> up to revision 3 of the proposal (N3609
+[<a href="#ref4">4</a>]). These two member functions were removed after LEWG
+discussion in Bristol. The main concerns were:</p>
+
+<p><ul>
+  <li><tt>basic_string_view</tt> should have an API consistent with <tt>basic_string</tt>;</li>
+  <li>changes to <tt>basic_string</tt> should go to a separate proposal.</li>
+</ul></p>
+
+<h2><a name="design">3. Design considerations</a></h2>
+
+<h3><a name="design-member">3.1. Member function vs free function</a></h3>
+
+<p>This proposal adds member functions <tt>starts_with</tt> and
+<tt>ends_with</tt> to class templates <tt>basic_string</tt> and
+<tt>basic_string_view</tt>. Another considered option was to add free functions
+to namespace std, but adding member functions is consistent with the existing
+API for <tt>compare</tt>. Besides, as the original proposal [<a href="#ref5">5</a>]
+mentioned, the order of parameters of a free function is
+ambiguous (<tt>starts_with(string, prefix)</tt> vs <tt>starts_with(prefix,
+string)</tt>).</p>
+
+<h3><a name="design-overload">3.2. Overload set</a></h3>
+
+<p>The original string_view proposal included the following overloads of
+<tt>starts_with</tt>:</p>
+
+<pre>
+// basic_string:
+bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+bool starts_with(charT c) const noexcept;
+bool starts_with(const charT* s) const noexcept;
+
+// basic_string_view:
+bool starts_with(const basic_string_view&amp; prefix) const noexcept;
+</pre>
+
+<p>Qt offers the following overload set (for QString and QStringRef):</p>
+
+<pre>
+bool startsWith(const QString &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+bool startsWith(const QLatin1String &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+bool startsWith(const QChar &amp; c, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+bool startsWith(const QStringRef &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
+</pre>
+
+<p>The C++ standard does not have case insensitive versions of string search and
+comparison functions, so such versions were not considered.</p>
+
+<p>This proposal includes the following overloads:</p>
+
+<pre>
+// basic_string:
+bool starts_with(charT c) const noexcept;
+bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+
+// basic_string_view:
+constexpr bool starts_with(charT c) const noexcept;
+constexpr bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+</pre>
+
+<p>Overload for<tt> const charT*</tt> is not included, because basic_string_view
+has a non-explicit constuctor, that takes such pointer. Likewise, overload for
+<tt>basic_string</tt> is not included, because <tt>basic_string</tt> has a
+non-explicit conversion operator to <tt>basic_string_view</tt>.</p>
+
+<h3><a name="design-byref">3.3. Passing by value vs passing by reference</a></h3>
+
+<p>This proposal basically repeats the changes mentioned in N3609, but in
+accordance to the guidance from P0254R1 [<a href="#ref5">5</a>], objects of type
+<tt>string_view</tt> are passed by value (not by reference).<p>
+
+<h2><a name="wording">4. Wording</a></h2>
+
+<h3><a name="wording-string">4.1. basic_string</a></h3>
+
+<p>In [basic.string], add:</p>
+
+<pre>
+bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+bool starts_with(charT c) const noexcept;
+bool ends_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+bool ends_with(charT c) const noexcept;
+</pre>
+
+<p>After [string::compare] add:</p>
+
+<p><b>basic_string::starts_with [string::starts_with]</b></p>
+
+<pre>
+bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:
+<p><ol>
+  <li><tt>s.size() &lt;= size()</tt>;</li>
+  <li><tt>traits::eq(at(I), s.at(I))</tt> for all elements I of the data
+    referenced by s.</li>
+</ol></p>
+Remarks: Uses traits::eq().<br>
+Complexity: O(s.size()).</p>
+
+<pre>
+bool starts_with(charT c) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:</p>
+<p><ol>
+  <li><tt>!empty();</tt></li>
+  <li><tt>traits::eq(front(), c)</tt></li>
+</ol></p>
+<p>Remarks: Uses <tt>traits::eq()</tt>.<br>
+Complexity: O(1).</p>
+
+<p><b>basic_string::ends_with [string::ends_with]</b></p>
+
+<pre>
+bool ends_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:
+<p><ol>
+  <li><tt>s.size() &lt;= size()</tt>;</li>
+  <li><tt>traits::eq(size() - s.size() + at(I), s.at(I))</tt>
+    for all elements I of the data referenced by s.</li>
+</ol></p>
+Remarks: Uses traits::eq().<br>
+Complexity: O(s.size()).</p>
+
+<pre>
+bool ends_with(charT c) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:</p>
+<p><ol>
+  <li><tt>!empty()</tt>;</li>
+  <li><tt>traits::eq(front(), c)</tt></li>
+</ol></p>
+<p>Remarks: Uses traits::eq().<br>
+Complexity: O(1).</p>
+
+<h3><a name="wording-string_view">4.2. basic_string_view</h3>
+
+<p>In [string.view.template], add:</p>
+
+<pre>
+constexpr bool starts_with(basic_string_view s) const noexcept;
+constexpr bool starts_with(charT c) const noexcept;
+constexpr bool ends_with(basic_string_view s) const noexcept;
+constexpr bool ends_with(charT c) const noexcept;
+</pre>
+
+<p>In [string.view.ops], add:</p>
+
+<pre>
+constexpr bool starts_with(basic_string_view s) const;
+</pre>
+<p>Effects: Equivalent to: <tt>return compare(0, npos, s) == 0;</tt></p>
+
+<pre>
+constexpr bool starts_with(charT c) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:</p>
+<p><ol>
+  <li><tt>!empty()</tt>;</li>
+  <li><tt>traits::eq(front(), c)</tt></li>
+</ol></p>
+<p>Remarks: Uses traits::eq().<br>
+Complexity: O(1).</p>
+
+<pre>
+constexpr bool ends_with(basic_string_view s) const;
+</pre>
+<p>Effects: Equivalent to:
+<tt>return size() &gt;= s.size() &amp;&amp; compare(size() - s.size(), npos, s) == 0;</tt></p>
+
+<pre>
+constexpr bool end_with(charT c) const noexcept;
+</pre>
+<p>Effects: Determines whether both of the following conditions hold:
+<p><ol>
+  <li><tt>!empty()</tt>;</li>
+  <li><tt>traits::eq(front(), c)</tt></li>
+</ol></p>
+<p>Remarks: Uses <tt>traits::eq()</tt>.<br>
+Complexity: O(1).</p>
+
+
+<h2><a name="references">5. References</h2>
+
+<ol>
+  <li>
+    <a name="ref1"></a>The Python Standard Library. Built-in Types.
+    <a href="https://docs.python.org/3.6/library/stdtypes.html#text-sequence-type-str">
+    https://docs.python.org/3.6/library/stdtypes.html#text-sequence-type-str</a>
+  </li>
+  <li>
+    <a name="ref2"></a>Java™ Platform, Standard Edition 7 API Specification. Class String.
+    <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/String.html">
+    https://docs.oracle.com/javase/7/docs/api/java/lang/String.html</a>
+  </li>
+  <li>
+    <a name="ref3"></a>Qt Documentation. QString Class.
+    <a href="http://doc.qt.io/qt-5/qstring.html">
+    http://doc.qt.io/qt-5/qstring.html</a>
+  </li>
+  <li>
+    <a name="ref4"></a>string_view: a non-owning reference to a string, revision 3
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3609.html">
+    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3609.html</a>
+  </li>
+  <li>
+    <a name="ref5"></a>Integrating std::string_view and std::string
+    <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0254r1.pdf">
+    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0254r1.pdf</a>
+  </li>
+</ol>
+</body>
+</html>
