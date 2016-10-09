@@ -17,40 +17,40 @@
 </head>
 
 <body>
-  <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
-    <tr>
-      <td width="172" align="left" valign="top">Document number:</td>
-      <td width="435"><span style="background-color:#FFFF00">D04012R0</span></td>
-    </tr>
-    <tr>
-      <td width="172" align="left" valign="top">Date:</td>
-      <td width="435">2016-07-05</td>
-    </tr>
-    <tr>
-      <td width="172" align="left" valign="top">Project:</td>
-      <td width="435">EWG, LEWG</td>
-    </tr>
-    <tr>
-      <td width="172" align="left" valign="top">Reply-to:</td>
-      <td width="435">Mikhail Maltsev
-          &lt;<a href="mailto:maltsevm@gmail.com">maltsevm@gmail.com</a>&gt;</td>
-    </tr>
-  </table>
-
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
+  <tr>
+    <td width="172" align="left" valign="top">Document number:</td>
+    <td width="435">P04012R0</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Date:</td>
+    <td width="435">2016-07-05</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Project:</td>
+    <td width="435">EWG, LEWG</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Reply-to:</td>
+    <td width="435">Mikhail Maltsev
+        &lt;<a href="mailto:maltsevm@gmail.com">maltsevm@gmail.com</a>&gt;</td>
+  </tr>
+</table>
 
 <h1>Benchmarking Primitives</h1>
 
 <p><ol>
-  <li><a href="#problem">The problem</a></li>
+  <li><a href="#motivation">Motivation</a></li>
   <li><a href="#design-space">Design space</a></li>
-  <li><a href="#proposal">The proposal</a></li>
+  <li><a href="#proposal">Proposal</a></li>
   <li><a href="#naming">Naming</a></li>
+  <li><a href="#implementation">Implementation experience</a></li>
   <li><a href="#example">Example</a></li>
   <li><a href="#acknowledgements">Acknowledgements</a></li>
   <li><a href="#references">References</a></li>
 </ol></p>
 
-<h2><a name="problem">1. The problem</a></h2>
+<h2><a name="problem">1. Motivation</a></h2>
 
 <p>When optimizing program performance, it is often desirable to be able to measure
 performance of an isolated piece of code on some predefined input. Ideally such
@@ -65,8 +65,7 @@ measurement:</p>
 
 <p>For example, consider the following code:</p>
 
-<code>
-#include &lt;chrono&gt;
+<code>#include &lt;chrono&gt;
 #include &lt;iostream&gt;
 
 double perform_computation(int);
@@ -77,11 +76,10 @@ void benchmark()
     auto start = chrono::high_resolution_clock::now();
     double answer = perform_computation(42);
     auto delta = chrono::high_resolution_clock::now() - start;
-    std::cout &lt;&lt; "Answer: " &lt;&lt; answer &lt;&lt; ". Computation took "
+    std::cout &lt;&lt; "The answer is: " &lt;&lt; answer &lt;&lt; ". Computation took "
               &lt;&lt; chrono::duration_cast<chrono::milliseconds>(delta).count()
               &lt;&lt; " ms";
-}
-</code>
+}</code>
 
 <p>Suppose that <tt>perform_computation</tt> does not have any observable side effect. In
 this case, the compiler can perform constant-folding, i.e., compute the value
@@ -109,8 +107,7 @@ Chandler also mentioned his talk [<a href="#ref2">2</a>] at CppCon 2015. This ta
 two primitives that can be used for benchmarking (using GCC extended asm
 syntax):
 
-<code>
-static void escape(void* p)
+<code>static void escape(void* p)
 {
     asm volatile("" : : "g"(p) : "memory");
 }
@@ -118,14 +115,13 @@ static void escape(void* p)
 static void clobber()
 {
     asm volatile("" : : : "memory");
-}
-</code>
+}</code>
 
 <p>IMHO, standardizing these functions (especially <tt>clobber</tt>) is problematic
 because the semantics of a "memory" clobber in the clobber list of an inline asm
 is implementation-specific.</p>
 
-<h2><a name="proposal">3. The proposal</a></h2>
+<h2><a name="proposal">3. Proposal</a></h2>
 
 This proposal adds a new header <tt>&lt;benchmark&gt;</tt>, which defines the following
 function templates:
@@ -178,12 +174,22 @@ perform any real I/O.</p>
   <li><tt>benchmarking</tt></li>
 </ul></p>
 
-<h2><a name="example">5. Example</a></h2>
+<h2><a name="implementation">5. Implementation experience</a></h2>
+
+This proposal has been implemented using GCC/Clang-specific language extensions
+(namely, extended inline assembly). It is also possible to implement
+<tt>keep</tt> and <tt>touch</tt> functions for POD types that don't have
+padding. Both prototype implementations are available on Github at
+<a href="https://github.com/miyuki-chan/benchmarking-proposal">
+https://github.com/miyuki-chan/benchmarking-proposal</a>. Implementation for
+the general case is likely to require compiler support (i.e., built-in a.k.a.
+<em>intrinsic</em> functions).
+
+<h2><a name="example">6. Example</a></h2>
 
 <p>The code shown above could be rewritten as:</p>
 
-<code>
-#include &lt;chrono&gt;
+<code>#include &lt;chrono&gt;
 #include &lt;iostream&gt;
 #include &lt;benchmark&gt;
 
@@ -198,19 +204,18 @@ void benchmark()
     double answer = perform_computation(value);
     experimental::benchmark::keep(answer);
     auto delta = chrono::high_resolution_clock::now() - start;
-    std::cout &lt;&lt; "Answer: " &lt;&lt; answer &lt;&lt; ". Computation took "
+    std::cout &lt;&lt; "The answer is: " &lt;&lt; answer &lt;&lt; ". Computation took "
               &lt;&lt; chrono::duration_cast&lt;chrono::milliseconds&gt;(delta).count()
               &lt;&lt; " ms";
-}
-</code>
+}</code>
 
 <p>This avoids the mentioned problems with constant folding and code motion.</p>
 
-<h2><a name="acknowledgements">6. Acknowledgements</a></h2>
+<h2><a name="acknowledgements">7. Acknowledgements</a></h2>
 
 Thanks to Web Brown for useful feedback.
 
-<h2><a name="references">7. References</a></h2>
+<h2><a name="references">8. References</a></h2>
 
 <ol>
   <li>
