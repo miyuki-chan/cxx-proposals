@@ -1,0 +1,241 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style type="text/css">
+    ins { text-decoration:none; font-weight:bold; background-color:#A0FFA0 }
+    .new { text-decoration:none; font-weight:bold; background-color:#D0FFD0 }
+    .rule { background-color:#FFFF40 }
+    .ex { background-color: #D0FFF0 }
+    code {
+    	border: 2px solid #d0d0d0;
+    	background-color: LightYellow;
+    	padding: 2px;
+    	padding-left: 10px;
+    	display:table;
+    	white-space:pre;
+  	  margin:2px;
+  	  margin-bottom:10px;
+    }
+    table { border-collapse:collapse; }
+    table.tbl, table.tbl th, table.tbl td {
+      border: 1px solid black;
+      padding: 5px
+    }
+  </style>
+  <title>Checking for existence of an element in associative containers</title>
+</head>
+<body>
+
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
+  <tr>
+    <td width="172" align="left" valign="top">Document number:</td>
+    <td width="435"><span style="background-color:#FFFF00">DxxxxR0</span></td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Date:</td>
+    <td width="435">2016-10-09</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Project:</td>
+    <td width="435">LEWG</td>
+  </tr>
+  <tr>
+    <td width="172" align="left" valign="top">Reply-to:</td>
+    <td width="435">Mikhail Maltsev
+        &lt;<a href="mailto:maltsevm@gmail.com">maltsevm@gmail.com</a>&gt;</td>
+  </tr>
+</table>
+
+<h1>Checking for existence of an element in associative containers</h1>
+
+<p><ol>
+  <li><a href="#abstract">Abstract</a></li>
+  <li><a href="#motivation">Motivation</a></li>
+  <li><a href="#design">Design considerations</a></li>
+  <li><a href="#wording">Wording</a></li>
+  <li><a href="#references">References</a></li>
+</ol></p>
+
+<h2><a name="abstract">1. Abstract</a></h2>
+
+<p>This paper proposes to add a member function <tt>contains</tt>, which checks,
+whether or not a given element exists in a container, to standard associative
+containers.</p>
+
+<h2><a name="motivation">2. Motivation</a></h2>
+
+<p>A common idiom for checking whether an element exists in an associative container
+involves doing a lookup and checking the returned iterator:</p>
+
+<code>if (my_set.find(element) != my_set.end()) {
+    // ...
+}
+</code>
+
+<p>This idiom suffers from excessive boilerplate code and IMHO is inferior to
+<tt>if (my_set.contains(element))</tt> in terms of expressing intent in code.</p>
+
+<p>It is also not obvious for beginners. Quoting a question from Stack Overflow [1]:</p>
+
+<blockquote>
+<p>How to check if <tt>std::map</tt> contains a key without doing insert?</p>
+
+<p>The only way I have found to check for duplicates is by inserting and checking
+the <tt>std::pair.second</tt> for false, but the problem is that this still inserts
+something if the key is unused, whereas what I want is a <tt>map.contains(key);</tt>
+function.</p>
+</blockquote>
+
+<p>The idea of this proposal is not new. It was discussed on
+&quot;std-proposals&quot; forum [2], but unfortunately that discussion did not
+result in a formal proposal.</p>
+
+<p>Qt library includes <tt>QSet</tt> and <tt>QMap</tt> class templates, similar
+to the standard ones, but they also provide <tt>contains</tt> member function.</p>
+
+<p>As Thiago Macieira pointed out in [2], in Qt itself, <tt>contains</tt> method
+is used much more widely than <tt>find</tt>.</p>
+
+<p>Arguably, for sets (<tt>std::set</tt> and <tt>std::unordered_set</tt>) testing
+a key for existence is much more common than using the <tt>find</tt> method for
+any other purpose, yet it requires to write more code.</p>
+
+<h2><a name="design">3. Design considerations</a></h2>
+
+<h3><a name="design-mem-fn">3.1. Member function vs free function</a></h3>
+
+<p>One might argue, that one of the core principles of the standard library
+is decoupling of algorithms and containers. Nevertheless, lookup by key is
+inherent to associative containers, i.e. <tt>find</tt> member function is not
+equivalent to <tt>std::find</tt>. So, if we were to add <tt>std::contains</tt>,
+it should work on ranges and be equivalent to
+<tt>std::find(first,&nbsp;last,&nbsp;element)&nbsp;!=&nbsp;last</tt> for consistency.
+
+<h3><a name="design-iter-bool">3.2. Make iterators convertible to bool</a></h3>
+
+<p>Another (non-)option would be to make iterators returned by associative
+containers contextually convertible to bool, i.e. make
+
+<code>if (my_set.find(element))</code>
+<p>equivalent to</p>
+<code>if (my_set.find(element) != my_set.end())</code>
+
+<p>In some implementations adding such a conversion would be possible without
+breaking the ABI. For example, this would definitely be possible for unordered
+associative containers in GCC (libstdc++'s <tt>unordered_set::iterator</tt>
+consists of a single pointer and for <tt>unordered_set::end</tt> this pointer
+is <tt>nullptr</tt>). Unfortunately this might not be the case in general, so
+this option is not proposed</p>
+
+<h2><a name="wording">4. Wording</a></h2>
+
+<h3><a name="wording-cont-req">4.1. Container requirements</a></h3>
+
+<p>In [associative.reqmts], &quot;Table 86 — Associative container requirements
+(in addition to container)&quot;, add:</p>
+
+<table class="tbl" align="center">
+  <tr>
+    <th>Expression</th>
+    <th>Return type</th>
+    <th>Assertion/note pre-/post-condition</th>
+    <th>Complexity</th>
+  </tr>
+  <tr>
+    <td><tt>b.contains(k)</tt></td>
+    <td><tt>bool</tt></td>
+    <td>equivalent to <tt>b.find(k) != b.end()</tt></td>
+    <td>logarithmic</td>
+  </tr>
+</table>
+
+<p>In [unord.req], &quot;Table 87 — Unordered associative container requirements
+(in addition to container)&quot;, add:</p>
+
+<table class="tbl" align="center">
+  <tr>
+    <th>Expression</th>
+    <th>Return type</th>
+    <th>Assertion/note pre-/post-condition</th>
+    <th>Complexity</th>
+  </tr>
+  <tr>
+    <td><tt>b.contains(k)</tt></td>
+    <td><tt>bool</tt></td>
+    <td>equivalent to <tt>b.find(k) != b.end()</tt></td>
+    <td>Average case O(1), worst case O(b.size())</td>
+  </tr>
+</table>
+
+<h3><a name="wording-assoc">4.2. Associative containers</a></h3>
+
+<p>In [map.overview], in section &quot;map operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp;quot x) const;
+  template &lt;class K&gt; bool contains(const K&amp; x) const;
+</pre>
+
+<p>In [multimap.overview], in section &quot;map operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; x) const;
+  template &lt;class K&gt; bool contains(const K&amp; x) const;
+</pre>
+
+<p>In [set.overview], in section &quot;set operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; x);
+  template &lt;class K&gt; bool contains(const K&amp; x) const;
+</pre>
+
+<p>In [multiset.overview], in section &quot;set operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; x);
+  template &lt;class K&gt; bool contains(const K&amp; x) const;
+</pre>
+
+<h3><a name="wording-unord">4.3. Unordered associative containers</a></h3>
+
+<p>In [unord.map.overview], in section &quot;map operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; k) const;
+</pre>
+
+<p>In [unord.multimap.overview], in section &quot;map operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; k) const;
+</pre>
+
+<p>In [unord.set.overview], in section &quot;set operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; k) const;
+</pre>
+
+<p>In [unord.multiset.overview], in section &quot;set operations&quot; add:</p>
+<pre>
+  bool contains(const key_type&amp; k) const;
+</pre>
+
+<h2><a name="references">5. References</h2>
+
+<p><ol>
+  <li>
+    <a name="ref-stack-overflow"></a>Stack Overflow question: How to check if std::map contains a key without doing insert?
+    <a href="http://stackoverflow.com/questions/3886593/how-to-check-if-stdmap-contains-a-key-without-doing-insert">
+      http://stackoverflow.com/questions/3886593/how-to-check-if-stdmap-contains-a-key-without-doing-insert</a>
+  </li>
+  <li>
+    <a href="https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ">
+      https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ
+    </a>
+  </li>
+  <li>
+    <a name="ref-qt"></a>Qt Documentation. QSet Class,
+    <a href="http://doc.qt.io/qt-5/qset.html">
+    http://doc.qt.io/qt-5/qset.html</a>
+  </li>
+</ol></p>
+
+</body>
+</html>

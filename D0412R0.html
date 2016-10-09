@@ -1,6 +1,18 @@
 <html><head>
 <meta http-equiv="Content-Language" content="en-us">
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<style type="text/css">
+  code {
+    border: 2px solid #d0d0d0;
+    background-color: LightYellow;
+    padding: 2px;
+    padding-left: 10px;
+    display:table;
+    white-space:pre;
+    margin:2px;
+    margin-bottom:10px;
+  }
+</style>
 <title>Benchmarking primitives</title>
 </head>
 
@@ -53,7 +65,7 @@ measurement:</p>
 
 <p>For example, consider the following code:</p>
 
-<pre>
+<code>
 #include &lt;chrono&gt;
 #include &lt;iostream&gt;
 
@@ -69,7 +81,7 @@ void benchmark()
               &lt;&lt; chrono::duration_cast<chrono::milliseconds>(delta).count()
               &lt;&lt; " ms";
 }
-</pre>
+</code>
 
 <p>Suppose that <tt>perform_computation</tt> does not have any observable side effect. In
 this case, the compiler can perform constant-folding, i.e., compute the value
@@ -97,7 +109,7 @@ Chandler also mentioned his talk [<a href="#ref2">2</a>] at CppCon 2015. This ta
 two primitives that can be used for benchmarking (using GCC extended asm
 syntax):
 
-<pre>
+<code>
 static void escape(void* p)
 {
     asm volatile("" : : "g"(p) : "memory");
@@ -107,7 +119,7 @@ static void clobber()
 {
     asm volatile("" : : : "memory");
 }
-</pre>
+</code>
 
 <p>IMHO, standardizing these functions (especially <tt>clobber</tt>) is problematic
 because the semantics of a "memory" clobber in the clobber list of an inline asm
@@ -170,7 +182,7 @@ perform any real I/O.</p>
 
 <p>The code shown above could be rewritten as:</p>
 
-<pre>
+<code>
 #include &lt;chrono&gt;
 #include &lt;iostream&gt;
 #include &lt;benchmark&gt;
@@ -190,7 +202,7 @@ void benchmark()
               &lt;&lt; chrono::duration_cast&lt;chrono::milliseconds&gt;(delta).count()
               &lt;&lt; " ms";
 }
-</pre>
+</code>
 
 <p>This avoids the mentioned problems with constant folding and code motion.</p>
 
