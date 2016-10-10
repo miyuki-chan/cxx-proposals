@@ -12,6 +12,11 @@
     margin:2px;
     margin-bottom:10px;
   }
+  blockquote {
+    border-left: 2px solid #d0d0d0;
+    padding-left: 10px;
+    margin: 0;
+  }
 </style>
 <title>Benchmarking Primitives</title>
 </head>
@@ -90,7 +95,8 @@ call to <tt>now</tt> or after the second one.</p>
 
 <h2><a name="design-space">2. Design space</a></h2>
 
-Proposal P0342R0 [<a href="#ref1">1</a>] to add timing barriers was rejected at Oulu meeting.
+Proposal P0342R0 [<a href="#ref1">1</a>] to add timing barriers was rejected at
+Oulu meeting.
 
 <blockquote>
 <p>Chandler: If the timing fence is inside now, and now is in another TU, how does
@@ -145,7 +151,7 @@ byte of its argument's object representation into an unspecified output
 device.</p>
 
 <p>The implementation shall treat a call to <tt>touch</tt> as-if <tt>touch</tt> reads
-each byte of its argument's object represenation from an unspecified input
+each byte of its argument's object representation from an unspecified input
 device. The actual value of the argument remains unchanged, but the
 implementation is not allowed to rely on that when performing optimization. If
 T is const-qualified, the program is ill-formed.</p>
