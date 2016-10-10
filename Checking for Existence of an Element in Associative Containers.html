@@ -29,7 +29,6 @@
 </head>
 <body>
 
-<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
   <tr>
     <td width="172" align="left" valign="top">Document number:</td>
     <td width="435">PxxxxR0</td>
@@ -130,12 +129,14 @@ any other purpose, yet it has less obvious API.</p>
 
 <h3><a name="design-mem-fn">3.1. Member function vs free function</a></h3>
 
-<p>One might argue, that one of the core principles of the standard library
-is decoupling of algorithms and containers. Nevertheless, lookup by key is
+<p><tt>contains</tt> could as well be added as a free function. One might
+even argue, that decoupling of algorithms and containers is one of the core
+principles of the standard library. Nevertheless, lookup by key is
 inherent to associative containers, i.e. <tt>find</tt> member function is not
 equivalent to <tt>std::find</tt>. So, if we were to add <tt>std::contains</tt>,
 it should work on ranges and be equivalent to
-<tt>std::find(first,&nbsp;last,&nbsp;element)&nbsp;!=&nbsp;last</tt> for consistency.
+<tt>std::find(first,&nbsp;last,&nbsp;element)&nbsp;!=&nbsp;last</tt>
+for consistency.
 
 <h3><a name="design-iter-bool">3.2. Make iterators convertible to bool</a></h3>
 
@@ -241,7 +242,7 @@ this option is not proposed</p>
   bool contains(const key_type&amp; k) const;
 </pre>
 
-<h2><a name="references">5. References</h2>
+<h2><a name="references">5. References</a></h2>
 
 <p><ol>
   <li>
@@ -250,7 +251,8 @@ this option is not proposed</p>
       http://stackoverflow.com/questions/3886593/how-to-check-if-stdmap-contains-a-key-without-doing-insert</a>
   </li>
   <li>
-    <a name="ref-discuss"></a>
+    <a name="ref-discuss"></a>ISO C++ Standard - Future Proposals.
+    Isn't it time we had the bool std::[container]::contains() family of methods?
     <a href="https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ">
       https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ
     </a>
