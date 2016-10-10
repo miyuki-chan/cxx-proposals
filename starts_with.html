@@ -122,7 +122,8 @@ bool starts_with(const charT* s) const noexcept;
 bool starts_with(const basic_string_view&amp; prefix) const noexcept;
 </pre>
 
-<p>Qt offers the following overload set (for QString and QStringRef):</p>
+<p>Qt offers the following overload set (for <tt>QString</tt> and
+<tt>QStringRef</tt>):</p>
 
 <pre>
 bool startsWith(const QString &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
@@ -146,16 +147,16 @@ constexpr bool starts_with(charT c) const noexcept;
 constexpr bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
 </pre>
 
-<p>Overload for<tt> const charT*</tt> is not included, because basic_string_view
-has a non-explicit constuctor, that takes such pointer. Likewise, overload for
-<tt>basic_string</tt> is not included, because <tt>basic_string</tt> has a
-non-explicit conversion operator to <tt>basic_string_view</tt>.</p>
+<p>Overload for<tt> const charT*</tt> is not included, because
+<tt>basic_string_view</tt> has a non-explicit constuctor, that takes such
+pointer. Likewise, overload for <tt>basic_string</tt> is not included, because
+<tt>basic_string</tt> has a non-explicit conversion operator to
+<tt>basic_string_view</tt>.</p>
 
 <h3><a name="design-byref">3.3. Passing by value vs passing by reference</a></h3>
 
-<p>This proposal basically repeats the changes mentioned in N3609, but in
-accordance to the guidance from P0254R1 [<a href="#ref5">5</a>], objects of type
-<tt>string_view</tt> are passed by value (not by reference).<p>
+<p>In accordance with the guidance from P0254R1 [<a href="#ref5">5</a>],
+objects of type <tt>basic_string_view</tt> are passed by value (not by reference).</p>
 
 <h2><a name="wording">4. Wording</a></h2>
 
@@ -177,13 +178,8 @@ bool ends_with(charT c) const noexcept;
 <pre>
 bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:
-<p><ol>
-  <li><tt>s.size() &lt;= size()</tt>;</li>
-  <li><tt>traits::eq(at(I), s.at(I))</tt> for all elements I of the data
-    referenced by s.</li>
-</ol></p>
-Remarks: Uses traits::eq().<br>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).starts_with(s);</tt><br>
 Complexity: O(s.size()).</p>
 
 <pre>
@@ -202,13 +198,8 @@ Complexity: O(1).</p>
 <pre>
 bool ends_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:
-<p><ol>
-  <li><tt>s.size() &lt;= size()</tt>;</li>
-  <li><tt>traits::eq(size() - s.size() + at(I), s.at(I))</tt>
-    for all elements I of the data referenced by s.</li>
-</ol></p>
-Remarks: Uses traits::eq().<br>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).ends_with(s);</tt><br>
 Complexity: O(s.size()).</p>
 
 <pre>
@@ -236,9 +227,10 @@ constexpr bool ends_with(charT c) const noexcept;
 <p>In [string.view.ops], add:</p>
 
 <pre>
-constexpr bool starts_with(basic_string_view s) const;
+constexpr bool starts_with(basic_string_view s) const noexcept;
 </pre>
-<p>Effects: Equivalent to: <tt>return compare(0, npos, s) == 0;</tt></p>
+<p>Effects: Equivalent to: <tt>return compare(0, npos, s) == 0;</tt><br>
+Complexity: O(s.size()).</p>
 
 <pre>
 constexpr bool starts_with(charT c) const noexcept;
@@ -252,10 +244,11 @@ constexpr bool starts_with(charT c) const noexcept;
 Complexity: O(1).</p>
 
 <pre>
-constexpr bool ends_with(basic_string_view s) const;
+constexpr bool ends_with(basic_string_view s) const noexcept;
 </pre>
 <p>Effects: Equivalent to:
-<tt>return size() &gt;= s.size() &amp;&amp; compare(size() - s.size(), npos, s) == 0;</tt></p>
+<tt>return size() &gt;= s.size() &amp;&amp; compare(size() - s.size(), npos, s) == 0;</tt><br>
+Complexity: O(s.size()).</p>
 
 <pre>
 constexpr bool end_with(charT c) const noexcept;
