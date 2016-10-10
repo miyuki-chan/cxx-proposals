@@ -30,6 +30,7 @@
 <h1>String Prefix and Suffix Checking</h1>
 
 <p><ol>
+  <li><a href="#abstract">Abstract</a></li>
   <li><a href="#motivation">Motivation</a></li>
   <li><a href="#prior">Prior work</a></li>
   <li>
@@ -50,7 +51,13 @@
   <li><a href="#references">References</a></li>
 </ol></p>
 
-<h2><a name="motivation">1. Motivation</a></h2>
+<h2><a name="abstract">1. Abstract</a></h2>
+<p>This paper proposes to add member functions <tt>starts_with</tt> and
+<tt>ends_with</tt> to class templates <tt>basic_string</tt> and
+<tt>basic_string_view</tt>. These functions check, whether or not a string
+starts with a given prefix or ends with a given suffix, respectively.</p>
+
+<h2><a name="motivation">2. Motivation</a></h2>
 <p>Checking, whether or not a given string starts with a
 given prefix (or ends with a given suffix) is a common task. In fact, standard
 libraries of many other programming languages include routines for performing
@@ -82,7 +89,7 @@ include Webkit (304 occurrences of <tt>startsWith</tt> and 142 occurrences of
 <tt>endsWith</tt>) and LLVM (class <tt>StringRef</tt>, 113 matches for
 <tt>StartsWith</tt> and 38 matches for <tt>EndsWith</tt>).</p>
 
-<h2><a name="prior">2. Prior work</a></h2>
+<h2><a name="prior">3. Prior work</a></h2>
 
 <p>The <tt>basic_string_view</tt> class template  included <tt>starts_with</tt>
 and <tt>ends_with</tt> up to revision 3 of the proposal (N3609
@@ -94,9 +101,9 @@ discussion in Bristol. The main concerns were:</p>
   <li>changes to <tt>basic_string</tt> should go to a separate proposal.</li>
 </ul></p>
 
-<h2><a name="design">3. Design considerations</a></h2>
+<h2><a name="design">4. Design considerations</a></h2>
 
-<h3><a name="design-member">3.1. Member function vs free function</a></h3>
+<h3><a name="design-member">4.1. Member function vs free function</a></h3>
 
 <p>This proposal adds member functions <tt>starts_with</tt> and
 <tt>ends_with</tt> to class templates <tt>basic_string</tt> and
@@ -107,7 +114,7 @@ mentioned, the order of parameters of a free function is
 ambiguous (<tt>starts_with(string, prefix)</tt> vs <tt>starts_with(prefix,
 string)</tt>).</p>
 
-<h3><a name="design-overload">3.2. Overload set</a></h3>
+<h3><a name="design-overload">4.2. Overload set</a></h3>
 
 <p>The original string_view proposal included the following overloads of
 <tt>starts_with</tt>:</p>
@@ -132,9 +139,6 @@ bool startsWith(const QChar &amp; c, Qt::CaseSensitivity cs = Qt::CaseSensitive)
 bool startsWith(const QStringRef &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensitive) const
 </pre>
 
-<p>The C++ standard does not have case insensitive versions of string search and
-comparison functions, so such versions were not considered.</p>
-
 <p>This proposal includes the following overloads:</p>
 
 <pre>
@@ -153,14 +157,14 @@ pointer. Likewise, overload for <tt>basic_string</tt> is not included, because
 <tt>basic_string</tt> has a non-explicit conversion operator to
 <tt>basic_string_view</tt>.</p>
 
-<h3><a name="design-byref">3.3. Passing by value vs passing by reference</a></h3>
+<h3><a name="design-byref">4.3. Passing by value vs passing by reference</a></h3>
 
 <p>In accordance with the guidance from P0254R1 [<a href="#ref5">5</a>],
 objects of type <tt>basic_string_view</tt> are passed by value (not by reference).</p>
 
-<h2><a name="wording">4. Wording</a></h2>
+<h2><a name="wording">5. Wording</a></h2>
 
-<h3><a name="wording-string">4.1. basic_string</a></h3>
+<h3><a name="wording-string">5.1. basic_string</a></h3>
 
 <p>In [basic.string], add:</p>
 
@@ -208,12 +212,12 @@ bool ends_with(charT c) const noexcept;
 <p>Effects: Determines whether both of the following conditions hold:</p>
 <p><ol>
   <li><tt>!empty()</tt>;</li>
-  <li><tt>traits::eq(front(), c)</tt></li>
+  <li><tt>traits::eq(back(), c)</tt></li>
 </ol></p>
 <p>Remarks: Uses traits::eq().<br>
 Complexity: O(1).</p>
 
-<h3><a name="wording-string_view">4.2. basic_string_view</a></h3>
+<h3><a name="wording-string_view">5.2. basic_string_view</a></h3>
 
 <p>In [string.view.template], add:</p>
 
@@ -256,13 +260,13 @@ constexpr bool end_with(charT c) const noexcept;
 <p>Effects: Determines whether both of the following conditions hold:
 <p><ol>
   <li><tt>!empty()</tt>;</li>
-  <li><tt>traits::eq(front(), c)</tt></li>
+  <li><tt>traits::eq(back(), c)</tt></li>
 </ol></p>
 <p>Remarks: Uses <tt>traits::eq()</tt>.<br>
 Complexity: O(1).</p>
 
 
-<h2><a name="references">5. References</h2>
+<h2><a name="references">6. References</h2>
 <p><ol>
   <li>
     <a name="ref1"></a>The Python Standard Library. Built-in Types,
