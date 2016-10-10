@@ -31,7 +31,7 @@
 <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
   <tr>
     <td width="172" align="left" valign="top">Document number:</td>
-    <td width="435"><span style="background-color:#FFFF00">DxxxxR0</span></td>
+    <td width="435">DxxxxR0</td>
   </tr>
   <tr>
     <td width="172" align="left" valign="top">Date:</td>
@@ -53,8 +53,21 @@
 <p><ol>
   <li><a href="#abstract">Abstract</a></li>
   <li><a href="#motivation">Motivation</a></li>
-  <li><a href="#design">Design considerations</a></li>
-  <li><a href="#wording">Wording</a></li>
+  <li>
+    <a href="#design">Design considerations</a>
+    <ol>
+      <li><a href="#design-mem-fn">Member function vs free function</a></li>
+      <li><a href="#design-iter-bool">Make iterators convertible to bool</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="#wording">Wording</a>
+    <ol>
+      <li><a href="#wording-cont-req">Container requirements</a></li>
+      <li><a href="#wording-assoc">Associative containers</a></li>
+      <li><a href="#wording-unord">Unordered associative containers</a></li>
+    </ol>
+  </li>
   <li><a href="#references">References</a></li>
 </ol></p>
 
@@ -69,38 +82,48 @@ containers.</p>
 <p>A common idiom for checking whether an element exists in an associative container
 involves doing a lookup and checking the returned iterator:</p>
 
-<code>if (my_set.find(element) != my_set.end()) {
+<code>if (some_set.find(element) != some_set.end()) {
     // ...
 }
 </code>
 
 <p>This idiom suffers from excessive boilerplate code and IMHO is inferior to
-<tt>if (my_set.contains(element))</tt> in terms of expressing intent in code.</p>
+<tt>if (some_set.contains(element))</tt> in terms of expressing intent in
+code.</p>
 
-<p>It is also not obvious for beginners. Quoting a question from Stack Overflow [1]:</p>
+<p>It is also not obvious for beginners. Quoting a question from Stack Overflow
+[<a href="#ref-stack-overflow">1</a>]:</p>
 
 <blockquote>
 <p>How to check if <tt>std::map</tt> contains a key without doing insert?</p>
 
-<p>The only way I have found to check for duplicates is by inserting and checking
-the <tt>std::pair.second</tt> for false, but the problem is that this still inserts
-something if the key is unused, whereas what I want is a <tt>map.contains(key);</tt>
-function.</p>
+<p>The only way I have found to check for duplicates is by inserting and
+checking the <tt>std::pair.second</tt> for false, but the problem is that this
+still inserts something if the key is unused, whereas what I want is a
+<tt>map.contains(key);</tt> function.</p>
 </blockquote>
 
+<p>Another (a little less common) way to perform the same task is using the
+<tt>count</tt> method. Unfortunately, it's use is suboptimal for multisets and
+multimaps (it has greater complexity, than <tt>find</tt>). In some sense it is
+similar to the <tt>size</tt> method of the standard library containers: it does
+not replace the <tt>empty</tt> method.
+
 <p>The idea of this proposal is not new. It was discussed on
-&quot;std-proposals&quot; forum [2], but unfortunately that discussion did not
-result in a formal proposal.</p>
+&quot;std-proposals&quot; forum [<a href="#ref-discuss">2</a>],
+but unfortunately that discussion did not result in a formal proposal.</p>
 
 <p>Qt library includes <tt>QSet</tt> and <tt>QMap</tt> class templates, similar
-to the standard ones, but they also provide <tt>contains</tt> member function.</p>
+to the standard ones, but they also provide <tt>contains</tt> member function
+[<a href="#ref-qt">3</a>].</p>
 
-<p>As Thiago Macieira pointed out in [2], in Qt itself, <tt>contains</tt> method
-is used much more widely than <tt>find</tt>.</p>
+<p>As Thiago Macieira (one of Qt developers) pointed out in
+[<a href="#ref-discuss">2</a>], in Qt itself, <tt>contains</tt> method is used
+much more widely than <tt>find</tt>.</p>
 
 <p>Arguably, for sets (<tt>std::set</tt> and <tt>std::unordered_set</tt>) testing
 a key for existence is much more common than using the <tt>find</tt> method for
-any other purpose, yet it requires to write more code.</p>
+any other purpose, yet it has less obvious API.</p>
 
 <h2><a name="design">3. Design considerations</a></h2>
 
@@ -118,9 +141,9 @@ it should work on ranges and be equivalent to
 <p>Another (non-)option would be to make iterators returned by associative
 containers contextually convertible to bool, i.e. make
 
-<code>if (my_set.find(element))</code>
+<code>if (some_set.find(element))</code>
 <p>equivalent to</p>
-<code>if (my_set.find(element) != my_set.end())</code>
+<code>if (some_set.find(element) != some_set.end())</code>
 
 <p>In some implementations adding such a conversion would be possible without
 breaking the ABI. For example, this would definitely be possible for unordered
@@ -173,7 +196,7 @@ this option is not proposed</p>
 
 <p>In [map.overview], in section &quot;map operations&quot; add:</p>
 <pre>
-  bool contains(const key_type&amp;quot x) const;
+  bool contains(const key_type&amp; x) const;
   template &lt;class K&gt; bool contains(const K&amp; x) const;
 </pre>
 
@@ -226,6 +249,7 @@ this option is not proposed</p>
       http://stackoverflow.com/questions/3886593/how-to-check-if-stdmap-contains-a-key-without-doing-insert</a>
   </li>
   <li>
+    <a name="ref-discuss"></a>
     <a href="https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ">
       https://groups.google.com/a/isocpp.org/forum/#!searchin/std-proposals/set$20contains/std-proposals/onDKXlivhhk/dSjfU0onMNUJ
     </a>

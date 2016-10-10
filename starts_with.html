@@ -10,7 +10,7 @@
 <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
   <tr>
     <td width="172" align="left" valign="top">Document number:</td>
-    <td width="435"><span style="background-color:#FFFF00">DxxxxR0</span></td>
+    <td width="435">DxxxxR0</td>
   </tr>
   <tr>
     <td width="172" align="left" valign="top">Date:</td>
@@ -32,8 +32,21 @@
 <p><ol>
   <li><a href="#motivation">Motivation</a></li>
   <li><a href="#prior">Prior work</a></li>
-  <li><a href="#design">Design considerations</a></li>
-  <li><a href="#wording">Wording</a></li>
+  <li>
+    <a href="#design">Design considerations</a>
+    <ol>
+      <li><a href="#design-member">Member function vs free function</a></li>
+      <li><a href="#design-overload">Overload set</a></li>
+      <li><a href="#design-byref">Passing by value vs passing by reference</a></li>
+    </ol>
+  </li>
+  <li>
+    <a href="#wording">Wording</a>
+    <ol>
+      <li><a href="#wording-string">basic_string</a></li>
+      <li><a href="#wording-string_view">basic_string_view</a></li>
+    </ol>
+  </li>
   <li><a href="#references">References</a></li>
 </ol></p>
 
@@ -209,7 +222,7 @@ bool ends_with(charT c) const noexcept;
 <p>Remarks: Uses traits::eq().<br>
 Complexity: O(1).</p>
 
-<h3><a name="wording-string_view">4.2. basic_string_view</h3>
+<h3><a name="wording-string_view">4.2. basic_string_view</a></h3>
 
 <p>In [string.view.template], add:</p>
 
