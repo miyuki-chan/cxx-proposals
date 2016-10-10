@@ -18,6 +18,11 @@
   	  margin:2px;
   	  margin-bottom:10px;
     }
+    blockquote {
+      border-left: 2px solid #d0d0d0;
+      padding-left: 10px;
+      margin: 0;
+    }
     table { border-collapse:collapse; }
     table.tbl, table.tbl th, table.tbl td {
       border: 1px solid black;
@@ -79,7 +84,7 @@ containers.</p>
 
 <h2><a name="motivation">2. Motivation</a></h2>
 
-<p>A common idiom for checking whether an element exists in an associative container
+<p>The common idiom for checking whether an element exists in an associative container
 involves doing a lookup and checking the returned iterator:</p>
 
 <code>if (some_set.find(element) != some_set.end()) {
@@ -87,7 +92,7 @@ involves doing a lookup and checking the returned iterator:</p>
 }
 </code>
 
-<p>This idiom suffers from excessive boilerplate code and IMHO is inferior to
+<p>This idiom suffers from excessive boilerplate code and is inferior to
 <tt>if (some_set.contains(element))</tt> in terms of expressing intent in
 code.</p>
 
@@ -105,7 +110,7 @@ still inserts something if the key is unused, whereas what I want is a
 
 <p>Another (a little less common) way to perform the same task is using the
 <tt>count</tt> method. Unfortunately, it's use is suboptimal for multisets and
-multimaps (it has greater complexity, than <tt>find</tt>). In some sense it is
+multimaps (it has greater complexity than <tt>find</tt>). In some sense it is
 similar to the <tt>size</tt> method of the standard library containers: it does
 not replace the <tt>empty</tt> method.
 
