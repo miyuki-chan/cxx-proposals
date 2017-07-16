@@ -10,11 +10,11 @@
 <table>
   <tr>
     <td width="172" align="left" valign="top">Document number:</td>
-    <td width="435">P0457R0</td>
+    <td width="435">P0457R1</td>
   </tr>
   <tr>
     <td width="172" align="left" valign="top">Date:</td>
-    <td width="435">2016-10-09</td>
+    <td width="435">2017-07-16</td>
   </tr>
   <tr>
     <td width="172" align="left" valign="top">Project:</td>
@@ -31,6 +31,12 @@
 
 <p><ol>
   <li><a href="#abstract">Abstract</a></li>
+  <li>
+    <a href="#history">History</a>
+    <ol>
+      <li><a href="#history-r0">Changes from R0</a></li>
+    </ol>
+  </li>
   <li><a href="#motivation">Motivation</a></li>
   <li><a href="#prior">Prior work</a></li>
   <li>
@@ -57,7 +63,14 @@
 <tt>basic_string_view</tt>. These functions check, whether or not a string
 starts with a given prefix or ends with a given suffix, respectively.</p>
 
-<h2><a name="motivation">2. Motivation</a></h2>
+
+<h2><a name="history">2. History</a></h2>
+<h3><a name="hist-r0">2.1. Changes from R0</a></h3>
+<p><ul>
+  <li>Overloads accepting <tt>const charT*</tt> were added</li>
+</ul></p>
+
+<h2><a name="motivation">3. Motivation</a></h2>
 <p>Checking, whether or not a given string starts with a
 given prefix (or ends with a given suffix) is a common task. In fact, standard
 libraries of many other programming languages include routines for performing
@@ -89,7 +102,7 @@ include Webkit (304 occurrences of <tt>startsWith</tt> and 142 occurrences of
 <tt>endsWith</tt>) and LLVM (class <tt>StringRef</tt>, 113 matches for
 <tt>StartsWith</tt> and 38 matches for <tt>EndsWith</tt>).</p>
 
-<h2><a name="prior">3. Prior work</a></h2>
+<h2><a name="prior">4. Prior work</a></h2>
 
 <p>The <tt>basic_string_view</tt> class template  included <tt>starts_with</tt>
 and <tt>ends_with</tt> up to revision 3 of the proposal (N3609
@@ -101,9 +114,9 @@ discussion in Bristol. The main concerns were:</p>
   <li>changes to <tt>basic_string</tt> should go to a separate proposal.</li>
 </ul></p>
 
-<h2><a name="design">4. Design considerations</a></h2>
+<h2><a name="design">5. Design considerations</a></h2>
 
-<h3><a name="design-member">4.1. Member function vs free function</a></h3>
+<h3><a name="design-member">5.1. Member function vs free function</a></h3>
 
 <p>This proposal adds member functions <tt>starts_with</tt> and
 <tt>ends_with</tt> to class templates <tt>basic_string</tt> and
@@ -114,7 +127,7 @@ mentioned, the order of parameters of a free function is
 ambiguous (<tt>starts_with(string, prefix)</tt> vs <tt>starts_with(prefix,
 string)</tt>).</p>
 
-<h3><a name="design-overload">4.2. Overload set</a></h3>
+<h3><a name="design-overload">5.2. Overload set</a></h3>
 
 <p>The original string_view proposal included the following overloads of
 <tt>starts_with</tt>:</p>
@@ -145,34 +158,36 @@ bool startsWith(const QStringRef &amp; s, Qt::CaseSensitivity cs = Qt::CaseSensi
 // basic_string:
 bool starts_with(charT c) const noexcept;
 bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+bool starts_with(const charT* s) const noexcept;
 
 // basic_string_view:
 constexpr bool starts_with(charT c) const noexcept;
 constexpr bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
+constexpr bool starts_with(const charT* s) const noexcept;
 </pre>
 
-<p>Overload for<tt> const charT*</tt> is not included, because
-<tt>basic_string_view</tt> has a non-explicit constuctor, that takes such
-pointer. Likewise, overload for <tt>basic_string</tt> is not included, because
+<p>The overload overload for <tt>basic_string</tt> is not included, because
 <tt>basic_string</tt> has a non-explicit conversion operator to
 <tt>basic_string_view</tt>.</p>
 
-<h3><a name="design-byref">4.3. Passing by value vs passing by reference</a></h3>
+<h3><a name="design-byref">5.3. Passing by value vs passing by reference</a></h3>
 
 <p>In accordance with the guidance from P0254R1 [<a href="#ref5">5</a>],
 objects of type <tt>basic_string_view</tt> are passed by value (not by reference).</p>
 
-<h2><a name="wording">5. Wording</a></h2>
+<h2><a name="wording">6. Wording</a></h2>
 
-<h3><a name="wording-string">5.1. basic_string</a></h3>
+<h3><a name="wording-string">6.1. basic_string</a></h3>
 
 <p>In [basic.string], add:</p>
 
 <pre>
 bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
 bool starts_with(charT c) const noexcept;
+bool starts_with(const charT* s) const noexcept;
 bool ends_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;
 bool ends_with(charT c) const noexcept;
+bool ends_with(const charT* s) const noexcept;
 </pre>
 
 <p>After [string::compare] add:</p>
@@ -217,15 +232,17 @@ bool ends_with(charT c) const noexcept;
 <p>Remarks: Uses traits::eq().<br>
 Complexity: O(1).</p>
 
-<h3><a name="wording-string_view">5.2. basic_string_view</a></h3>
+<h3><a name="wording-string_view">6.2. basic_string_view</a></h3>
 
 <p>In [string.view.template], add:</p>
 
 <pre>
 constexpr bool starts_with(basic_string_view s) const noexcept;
 constexpr bool starts_with(charT c) const noexcept;
+constexpr bool starts_with(const charT* s) const noexcept;
 constexpr bool ends_with(basic_string_view s) const noexcept;
 constexpr bool ends_with(charT c) const noexcept;
+constexpr bool ends_with(const charT* s) const noexcept;
 </pre>
 
 <p>In [string.view.ops], add:</p>
@@ -266,7 +283,7 @@ constexpr bool end_with(charT c) const noexcept;
 Complexity: O(1).</p>
 
 
-<h2><a name="references">6. References</h2>
+<h2><a name="references">7. References</h2>
 <p><ol>
   <li>
     <a name="ref1"></a>The Python Standard Library. Built-in Types,
