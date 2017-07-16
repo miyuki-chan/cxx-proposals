@@ -68,6 +68,14 @@ starts with a given prefix or ends with a given suffix, respectively.</p>
 <h3><a name="hist-r0">2.1. Changes from R0</a></h3>
 <p><ul>
   <li>Overloads accepting <tt>const charT*</tt> were added</li>
+  <li>
+    Behaviour of all operations (except the two mentioned below) was expressed in terms of
+    the following two methods of the <tt>basic_string_view</tt> template:
+    <ul>
+      <li><tt>constexpr bool starts_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;</tt></li>
+      <li><tt>constexpr bool ends_with(basic_string_view&lt;charT, traits&gt; s) const noexcept;</tt></li>
+    </ul>
+  </li>
 </ul></p>
 
 <h2><a name="motivation">3. Motivation</a></h2>
@@ -204,13 +212,16 @@ Complexity: O(s.size()).</p>
 <pre>
 bool starts_with(charT c) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:</p>
-<p><ol>
-  <li><tt>!empty();</tt></li>
-  <li><tt>traits::eq(front(), c)</tt></li>
-</ol></p>
-<p>Remarks: Uses <tt>traits::eq()</tt>.<br>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).starts_with(c);</tt><br>
 Complexity: O(1).</p>
+
+<pre>
+bool starts_with(const charT* s) const noexcept;
+</pre>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).starts_with(s);</tt><br>
+Complexity: O(<tt>basic_string_view&lt;charT, traits&gt;(s).size()</tt>).</p>
 
 <p><b>basic_string::ends_with [string::ends_with]</b></p>
 
@@ -224,13 +235,16 @@ Complexity: O(s.size()).</p>
 <pre>
 bool ends_with(charT c) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:</p>
-<p><ol>
-  <li><tt>!empty()</tt>;</li>
-  <li><tt>traits::eq(back(), c)</tt></li>
-</ol></p>
-<p>Remarks: Uses traits::eq().<br>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).ends_with(c);</tt><br>
 Complexity: O(1).</p>
+
+<pre>
+bool ends_with(const charT* s) const noexcept;
+</pre>
+<p>Effects: Equivalent to:
+<tt>return basic_string_view&lt;charT, traits&gt;(data(), size()).ends_with(s);</tt><br>
+Complexity: O(<tt>basic_string_view&lt;charT, traits&gt;(s).size()</tt>).</p>
 
 <h3><a name="wording-string_view">6.2. basic_string_view</a></h3>
 
@@ -256,13 +270,14 @@ Complexity: O(s.size()).</p>
 <pre>
 constexpr bool starts_with(charT c) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:</p>
-<p><ol>
-  <li><tt>!empty()</tt>;</li>
-  <li><tt>traits::eq(front(), c)</tt></li>
-</ol></p>
-<p>Remarks: Uses traits::eq().<br>
+<p>Effects: Equivalent to: <tt>return starts_with(basic_string_view(&amp;c, 1));</tt><br>
 Complexity: O(1).</p>
+
+<pre>
+constexpr bool starts_with(const charT* s) const noexcept;
+</pre>
+<p>Effects: Equivalent to: <tt>return starts_with(basic_string_view(s));</tt><br>
+Complexity: O(<tt>basic_string_view(s).size()</tt>).</p>
 
 <pre>
 constexpr bool ends_with(basic_string_view s) const noexcept;
@@ -274,14 +289,15 @@ Complexity: O(s.size()).</p>
 <pre>
 constexpr bool end_with(charT c) const noexcept;
 </pre>
-<p>Effects: Determines whether both of the following conditions hold:
-<p><ol>
-  <li><tt>!empty()</tt>;</li>
-  <li><tt>traits::eq(back(), c)</tt></li>
-</ol></p>
-<p>Remarks: Uses <tt>traits::eq()</tt>.<br>
+<p>Effects: Equivalent to:
+<tt>return ends_with(basic_string_view(&amp;c, 1))</tt><br>
 Complexity: O(1).</p>
 
+<pre>
+constexpr bool ends_with(const charT* s) const noexcept;
+</pre>
+<p>Effects: Equivalent to: <tt>return ends_with(basic_string_view(s));</tt><br>
+Complexity: O(<tt>basic_string_view(s).size()</tt>).</p>
 
 <h2><a name="references">7. References</h2>
 <p><ol>
